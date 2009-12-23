@@ -83,11 +83,13 @@ class Filter {
 		if (count($keys) < 1)
 			return $this;
 			
+		$globals = Arr::merge($_POST, $_GET)
+			
 		$vals = array();
 		
 		foreach ($keys as $key)
 		{
-			$vals[$key] = Arr::get(Arr::merge($_POST, $_GET), $key);
+			$vals[$key] = Arr::get($globals, $key);
 		}
 		
 		$this->_local += $vals;
