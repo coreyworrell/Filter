@@ -3,51 +3,102 @@
 This class can be used with the Kohana PHP framework to keep `$_GET`, `$_POST`, or any data across multiple page loads,so users can see filtered results w/out having to re-filter.
 It can also be used to repopulate form fields when redirecting to avoid submitting a form twice for example.
 
-## Usage
+## How It Works
 
-	class Item_Controller extends Controller {
-	
-		public function before()
-		{
-			$published = 'Whatever you want for example.'
+Ok, let's say you have a setup with 3 controllers (or pages): _Blog_, _Portfolio_, & _Users_.  
+Each page will have filters that you want to keep track of: _page_, _ordering_, & _query_.  
+_page_, _ordering_, & _query_ are variables that are being collected in `$_POST` or `$_GET` when a user submits a form.
+
+You would set that up something like this:
+
+		class Controller_Blog extends Controller_Template {
 			
-			$this->filters = Filter::instance()
-			     ->add('ordering', 'country')
-			     ->set('published', $published);
-				 
-			// The 'add()' method would get 'ordering' and 'country' from $_POST or $_GET
-			// The 'set()' method is manually set to the value of '$published'
+			public function action_index()
+			{
+				$filters = Filter::instance()->add('page', 'ordering', 'query');
+			}
+			
+			public function action_display()
+			{
+				$filters = Filter::instance()->add('page', 'ordering');
+			}
+			
+			// Rest of controller actions here or whatever.
+		
 		}
+		
+		// Same for Portfolio and Users controllers
+
+Now after a user goes to those pages and submits forms and applies filters, you could expect your `$_SESSION` array to look something like this:
+	Array
+	(
+		[filters] => Array
+		(
+			[blog] => Array
+			(
+				[index] => Array
+				(
+					[page] => 5
+					[ordering] => id_desc
+					[query] => searching
+				)
+				[display] => Array
+				(
+					[page] => 1
+					[ordering] => 
+				)
+			)
+			[portfolio] => Array
+			(
+				[index] => Array
+				(
+					[page] => 2
+					[ordering] => id_asc
+					[query] => 
+				)
+			)
+			[users] => Array
+			(
+				[index] => Array
+				(
+					[page] => 4
+					[ordering] => 
+					[query] => username
+				)
+			)
+		)
+	)
+
+
+## Example Usage
+
+	class Controller_Item extends Controller {
 		
 		public function action_index()
 		{
-			// Get some posts from Database and filter them
-			$count = DB::select(DB::expr('COUNT(*) AS count'))->from('posts')->execute()->get('count');
+			$published = 'anything, could be a variable you got from a CURL request, or whatever!';
 			
-			$paging = Pagination::factory(array(
-				'total_items'    => $count,
-				'items_per_page' => 20,
-			));
-			
+			$filters = Filter::instance()
+			     ->add('ordering', 'country')
+			     ->set('published', $published);
+				 
 			$posts = DB::select()->from('posts')
-				->where('country', '=', $this->filters->country)
-				->and_where('published', '=', $this->filters->published)
-				->limit($paging->items_per_page)
-				->offset($paging->offset)
+				->where('country', '=', $filters->country)
+				->and_where('published', '=', $filters->published)
 				->execute();
 				
-			// $this->filters contains all those filters that were added in the 'before' method.
+			// $filters contains all the filters available to this action
 			
 			// Or if you want the filters as an array, simply do this:
-			$filter_array = $this->filters->get();
+			$filter_array = $filters->get();
 			$ordering = $filter_array['ordering'];
 			
 			// Or just grab a single filter
-			$ordering = $this->filters->get('ordering');
+			$ordering = $filters->get('ordering');
 			
 			// Or if you need a filter from another page or method, you can
 			// grab them all in an array using the method below
-			$all_filters = $this->filters->get_global();
+			$all_filters = $filters->get_global();
 		}
 		
 	}
