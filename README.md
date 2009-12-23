@@ -1,6 +1,6 @@
 # Kohana Filter Class
 
-This class can be used with the Kohana PHP framework to keep $_GET, $_POST, or any data across multiple page loads,so users can see filtered results w/out having to re-filter.
+This class can be used with the Kohana PHP framework to keep `$_GET`, `$_POST`, or any data across multiple page loads,so users can see filtered results w/out having to re-filter.
 It can also be used to repopulate form fields when redirecting to avoid submitting a form twice for example.
 
 ## Usage
