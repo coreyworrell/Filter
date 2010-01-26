@@ -1,13 +1,13 @@
 # Kohana Filter Class
 
-This class can be used with the Kohana PHP framework to keep `$_GET`, `$_POST`, or any data across multiple page loads,so users can see filtered results w/out having to re-filter.
-It can also be used to repopulate form fields when redirecting to avoid submitting a form twice for example.
+Sets up a filtering system where keys from $_GET and $_POST can be stored in the session to be used to filter data. The advantage to storing these in 
+the session is that the filters will remain after a user leaves the page, so that when they come back they won't have to refilter anything.
 
 ## How It Works
 
 Ok, let's say you have a setup with 3 controllers (or pages): _Blog_, _Portfolio_, & _Users_.  
-Each page will have filters that you want to keep track of: _page_, _ordering_, & _query_.  
-_page_, _ordering_, & _query_ are variables that are being collected in `$_POST` or `$_GET` when a user submits a form.
+Each page will have filters that you want to keep track of: _page_, _category_, & _search_.  
+_page_, _category_, & _search_ are variables that are being collected in `$_POST` or `$_GET` when a user submits a form.
 
 You would set that up something like this:
 
@@ -15,12 +15,39 @@ You would set that up something like this:
 			
 			public function action_index()
 			{
-				$filters = Filter::instance()->add('page', 'ordering', 'query');
+				$this->template->content = View::factory('blog')
+					->bind('filters', $filters)
+					->bind('posts', $posts)
+					->bind('categories', $categories);
+				
+				$filters = Filter::instance(array(
+						'page'     => 1,
+						'ordering' => 'id DESC',
+						'search'   => NULL,
+					));
+					
+				$per_page = 10;
+				$offset = ($filters->page - 1) * $per_page;
+					
+				$posts = Model::factory('post')
+					->where('category_id', '=', $filters->category)
+					->where_open()
+						->where('title', 'LIKE', $filters->search)
+						->where('body', 'LIKE', $filters->search)
+					->where_close()
+					->limit($per_page)
+					->offset($offset)
+					->execute();
+				
+				$categories = Model::factory('category')->select_list();
 			}
 			
 			public function action_display()
 			{
-				$filters = Filter::instance()->add('page', 'ordering');
+				$filters = Filter::instance((
+						'page'     => 1,
+						'ordering' => 'id ASC'
+					));
 			}
 			
 			// Rest of controller actions here or whatever.
@@ -29,7 +56,28 @@ You would set that up something like this:
 		
 		// Same for Portfolio and Users controllers
 
+And you could set up your view with something like this:
+
+	<h1>Blog</h1>
+	
+	<?php echo form::open() ?>
+		<?php echo form::label('search') ?>
+		<?php echo form::input('search', $filters->search) ?>
+		
+		<?php echo form::select('category', $categories, $filter->category) ?>
+		
+		<button type="submit">Filter</button>
+	</form>
+	
+	<?php foreach ($posts as $post): ?>
+		<div class="post">
+			<h2><?php echo $post->title ?></h2>
+			<?php echo $post->body ?>
+		</div>
+	<?php endforeach ?>
+
 Now after a user goes to those pages and submits forms and applies filters, you could expect your `$_SESSION` array to look something like this:
+
 	Array
 	(
 		[filters] => Array
@@ -38,67 +86,33 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 			(
 				[index] => Array
 				(
-					[page] => 5
-					[ordering] => id_desc
-					[query] => searching
+					[page]     => 5
+					[parent] => id DESC
+					[query]    => searching
 				)
 				[display] => Array
 				(
-					[page] => 1
-					[ordering] => 
+					[page]     => 1
+					[ordering] => id ASC
 				)
 			)
 			[portfolio] => Array
 			(
 				[index] => Array
 				(
-					[page] => 2
-					[ordering] => id_asc
-					[query] => 
+					[page]     => 2
+					[ordering] => id ASC
+					[query]    => NULL
 				)
 			)
 			[users] => Array
 			(
 				[index] => Array
 				(
-					[page] => 4
-					[ordering] => 
-					[query] => username
+					[page]     => 4
+					[ordering] => NULL
+					[query]    => username
 				)
 			)
 		)
 	)
-
-
-## Example Usage
-
-	class Controller_Item extends Controller {
-		
-		public function action_index()
-		{
-			$published = 'anything, could be a variable you got from a CURL request, or whatever!';
-			
-			$filters = Filter::instance()
-			     ->add('ordering', 'country')
-			     ->set('published', $published);
-				 
-			$posts = DB::select()->from('posts')
-				->where('country', '=', $filters->country)
-				->and_where('published', '=', $filters->published)
-				->execute();
-				
-			// $filters contains all the filters available to this action
-			
-			// Or if you want the filters as an array, simply do this:
-			$filter_array = $filters->get();
-			$ordering = $filter_array['ordering'];
-			
-			// Or just grab a single filter
-			$ordering = $filters->get('ordering');
-			
-			// Or if you need a filter from another page or method, you can
-			// grab them all in an array using the method below
-			$all_filters = $filters->get_global();
-		}
-		
-	}

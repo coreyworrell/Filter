@@ -2,131 +2,160 @@
 /**
  * Filter
  *
- * Used to keep $_GET, $_POST, or any data across multiple page loads,
- * so users can see filtered results w/out having to re-filter.
- * Can also be used to repopulate form fields when redirecting to avoid
- * submitting a form twice for example. 
+ * Sets up a filtering system where keys from $_GET and $_POST can be stored
+ * in the session to be used to filter data. The advantage to storing these in
+ * the session is that the filters will remain after a user leaves the page,
+ * so that when they come back they won't have to refilter anything.
  *
  * @author   Corey Worrell
  * @homepage http://coreyworrell.com
- * @version  1.0
+ * @version  1.2
  */
 class Filter {
 	
 	// Holds all filters available across site
 	protected $_filters = array();
 	
-	// Reference to the session
-	protected $_session;
-	
-	// The active controller name
-	protected $_controller;
-	
-	// The active controller action name
-	protected $_action;
-	
 	// Holds the filters 'local' to the active controller and action
 	protected $_local = array();
 	
+	// References to the defaults
+	protected $_keys;
+	
+	// Reference to globals
+	protected $_globals;
+	
+	// Reference to the session
+	protected $_session;
+	
+	// Session key to store filters
+	protected $_sk;
+	
 	/**
 	 * Creates a singleton instance
+	 *
+	 * Add any number of keys to grab from $_GET and $_POST to be used as filters
+	 * Associative array of keys => defaults
+	 *
+	 * For example, if you want to store the page number and ordering for this page,
+	 * you'd do this:
+	 *     Filter::instance(array(
+	 *         'page'  => 1,
+	 *         'order' => 'id DESC',
+	 *     ));
+	 *
+	 * And now it will get the 'page' and 'ordering' values from $_GET or $_POST and
+	 * store them in the Session
+	 *
+	 * @param   array   Key => Defaults to grab from globals
+	 * @param   string  Session key to store filters in
+	 * @return  Filter
 	 */
-	public static function instance()
+	public static function instance(array $keys, $session_key = 'filters')
 	{
 		static $instance;
 		
-		! $instance AND $instance = new Filter;
+		$instance OR $instance = new Filter($keys, $session_key);
 		
 		return $instance;
 	}
 	
 	/**
 	 * Sets up the filters environment in the Session
+	 *
+	 * @param   array   Key => Defaults to grab from globals
+	 * @param   string  Session key to store filters in
+	 * @return  void
 	 */
-	public function __construct()
+	public function __construct(array $keys, $session_key = 'filters')
 	{
 		$this->_session = Session::instance();
-		$this->_controller = Request::instance()->controller;
-		$this->_action = Request::instance()->action;
-		$this->_filters = $this->_session->get('filters', array());
+		$this->_sk      = $session_key;
+		$this->_keys    = $keys;
+		$this->_filters = $this->_session->get($this->_sk, array());
+		$this->_globals = Arr::merge($_POST, $_GET);
 		
-		if ( ! isset($this->_filters[$this->_controller]))
+		$controller = Request::instance()->controller;
+		$action     = Request::instance()->action;
+		
+		if ( ! isset($this->_filters[$controller]))
 		{
-			$this->_filters[$this->_controller] = array();
-		}
-		if ( ! isset($this->_filters[$this->_controller][$this->_action]))
-		{
-			$this->_filters[$this->_controller][$this->_action] = array();
+			$this->_filters[$controller] = array();
 		}
 		
-		$this->_local = & $this->_filters[$this->_controller][$this->_action];
+		if ( ! isset($this->_filters[$controller][$action]))
+		{
+			$this->_filters[$controller][$action] = array();
+		}
+		
+		$this->_local = & $this->_filters[$controller][$action];
+		
+		$this->add($keys);
 	}
 	
 	/**
-	 * Add any number of keys to grab from $_GET and $_POST to be used as filters
+	 * Add filters
+	 * $keys can be an array containing Keys => Defaults
 	 *
-	 * For example, if you want to store the page number and ordering for this page,
-	 * you'd do this:
-	 *     Filter::instance()->add('page', 'ordering');
-	 * And now it will get the 'page' and 'ordering' values from $_GET or $_POST and
-	 * put them in the filters Session array.
-	 *
-	 * @chainable
-	 * @param   string   Key to get from $_GET or $_POST
-	 * ...
+	 * @param   string   Filter key
+	 * @param   mixed    Default
 	 * @return  Filter
 	 */
-	public function add()
+	public function add($keys, $value = NULL)
 	{
-		$keys = func_get_args();
-		
-		if (count($keys) < 1)
-			return $this;
-			
-		$globals = Arr::merge($_POST, $_GET)
-			
-		$vals = array();
-		
-		foreach ($keys as $key)
+		if ( ! is_array($keys))
 		{
-			$vals[$key] = Arr::get($globals, $key);
+			$keys = array($keys => $value);
 		}
 		
-		$this->_local += $vals;
+		$this->_keys += $keys;
 		
-		$this->_session->set('filters', $this->_filters);
+		foreach ($keys as $key => $default)
+		{
+			if (array_key_exists($key, $this->_globals))
+			{
+				$this->_local[$key] = Arr::get($this->_globals, $key, $default);
+			}
+			elseif ( ! array_key_exists($key, $this->_local))
+			{
+				$this->_local[$key] = $default;
+			}
+		}
 		
-		return $this;
+		$this->_session->set($this->_sk, $this->_filters);
 	}
 	
 	/**
 	 * Set a key manually. Rather than getting from $_GET or $_POST
 	 *
+	 * $key can be an array containing keys => values to set multiple
+	 * keys as once
+	 *
 	 * @param   string   Filter name
 	 * @param   mixed    Value of the filter
 	 * @return  Filter
 	 */
-	public function set($key, $value = NULL)
+	public function set($keys, $value = NULL)
 	{
-		if ( ! is_array($key))
+		if ( ! is_array($keys))
 		{
-			$key = array($key => $value);
+			$keys = array($keys => $value);
 		}
 		
-		foreach ($key as $k => $v)
+		foreach ($keys as $key => $value)
 		{
-			$this->_local[$k] = $v;
+			$this->_local[$key] = $value;
 		}
 		
-		$this->_session->set('filters', $this->_filters);
+		$this->_session->set($this->_sk, $this->_filters);
 		
 		return $this;
 	}
 	
 	/**
-	 * Get all filters as array if no params are given, or return a specific key
+	 * Get a filter, or if no params are given return all local filters
 	 *
-	 * @param   string   Filter name
+	 * @param   string   Filter key
 	 * @param   mixed    Default value if key does not exist
 	 * @return  mixed    Value of filter
 	 */
@@ -134,35 +163,46 @@ class Filter {
 	{
 		if (empty($key))
 		{
-			$ret = isset($this->_local) ? $this->_local : array();
+			$data = $this->_local;
 		}
 		else
 		{
-			$ret = Arr::get($this->_local, $key, $default);
+			$data = Arr::get($this->_local, $key, $default);
 		}
 		
-		return $ret;
+		return $data;
+	}
+	
+	/**
+	 * Get all global filters as an array
+	 *
+	 * @return   array  All filters
+	 */
+	public function get_global()
+	{
+		return $this->_filters;
 	}
 	
 	/**
 	 * Delete filters
-	 * If no parameters are given, it will delete all local filters
+	 * If no keys are given, it will delete all local filters
 	 *
-	 * @param   string   Filter name
-	 * ...
+	 * @param   array   One key or an array of keys to delete
 	 * @return  Filter
 	 */
-	public function delete()
+	public function delete($keys = NULL)
 	{
-		$keys = func_get_args();
-		
-		if (count($keys) < 1)
+		if (empty($keys))
 		{
 			$this->_local = array();
-			$this->_session->set('filters', $this->_filters);
 		}
 		else
 		{
+			if ( ! is_array($keys))
+			{
+				$keys = array($keys);
+			}
+			
 			foreach ($keys as $key)
 			{
 				if (array_key_exists($key, $this->_local))
@@ -170,8 +210,40 @@ class Filter {
 					unset($this->_local[$key]);
 				}
 			}
+		}
+		
+		$this->_session->set($this->_sk, $this->_filters);
+		
+		return $this;
+	}
+	
+	/**
+	 * Reset filters to defaults
+	 * If no keys are given, all keys will be reset
+	 *
+	 * @param   array   One key or an array of keys to reset
+	 * @return  Filter
+	 */
+	public function reset($keys = NULL)
+	{
+		if (empty($keys))
+		{
+			foreach ($this->_keys as $key => $default)
+			{
+				$this->_local[$key] = $default;
+			}
+		}
+		else
+		{
+			if ( ! is_array($keys))
+			{
+				$keys = array($keys);
+			}
 			
-			$this->_session->set('filters', $this->_filters);
+			foreach ($keys as $key)
+			{
+				$this->_local[$key] = $this->_keys[$key];
+			}
 		}
 		
 		return $this;
@@ -197,7 +269,7 @@ class Filter {
 	 */
 	public function __get($key)
 	{
-		$this->get($key);
+		return $this->get($key);
 	}
 
 }
