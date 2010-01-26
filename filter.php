@@ -122,7 +122,7 @@ class Filter {
 			}
 		}
 		
-		$this->_session->set($this->_sk, $this->_filters);
+		$this->_session_set();
 	}
 	
 	/**
@@ -147,7 +147,7 @@ class Filter {
 			$this->_local[$key] = $value;
 		}
 		
-		$this->_session->set($this->_sk, $this->_filters);
+		$this->_session_set();
 		
 		return $this;
 	}
@@ -212,7 +212,7 @@ class Filter {
 			}
 		}
 		
-		$this->_session->set($this->_sk, $this->_filters);
+		$this->_session_set();
 		
 		return $this;
 	}
@@ -246,6 +246,8 @@ class Filter {
 			}
 		}
 		
+		$this->_session_set();
+		
 		return $this;
 	}
 	
@@ -270,6 +272,14 @@ class Filter {
 	public function __get($key)
 	{
 		return $this->get($key);
+	}
+	
+	/**
+	 * Writes the filters to the session
+	 */
+	protected function _session_set()
+	{
+		$this->_session->set($this->_sk, $this->_filters);
 	}
 
 }
