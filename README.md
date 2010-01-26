@@ -87,8 +87,8 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 				[index] => Array
 				(
 					[page]     => 5
-					[category] => id DESC
-					[search]    => searching
+					[category] => tutorials
+					[search]   => searching
 				)
 				[display] => Array
 				(
@@ -102,7 +102,7 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 				(
 					[page]     => 2
 					[ordering] => id ASC
-					[search]    => NULL
+					[search]   => NULL
 				)
 			)
 			[users] => Array
@@ -111,7 +111,7 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 				(
 					[page]     => 4
 					[ordering] => NULL
-					[search]    => username
+					[search]   => username
 				)
 			)
 		)
