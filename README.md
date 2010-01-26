@@ -33,7 +33,7 @@ You would set that up something like this:
 					->where('category_id', '=', $filters->category)
 					->where_open()
 						->where('title', 'LIKE', $filters->search)
-						->where('body', 'LIKE', $filters->search)
+						->or_where('body', 'LIKE', $filters->search)
 					->where_close()
 					->limit($per_page)
 					->offset($offset)
@@ -87,8 +87,8 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 				[index] => Array
 				(
 					[page]     => 5
-					[parent] => id DESC
-					[query]    => searching
+					[category] => id DESC
+					[search]    => searching
 				)
 				[display] => Array
 				(
@@ -102,7 +102,7 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 				(
 					[page]     => 2
 					[ordering] => id ASC
-					[query]    => NULL
+					[search]    => NULL
 				)
 			)
 			[users] => Array
@@ -111,7 +111,7 @@ Now after a user goes to those pages and submits forms and applies filters, you 
 				(
 					[page]     => 4
 					[ordering] => NULL
-					[query]    => username
+					[search]    => username
 				)
 			)
 		)
