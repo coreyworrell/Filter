@@ -1,6 +1,6 @@
 # Kohana Filter Class
 
-Sets up a filtering system where keys from $_GET and $_POST can be stored in the session to be used to filter data. The advantage to storing these in 
+Sets up a filtering system where keys from `$_GET` and `$_POST` can be stored in the session to be used to filter data. The advantage to storing these in 
 the session is that the filters will remain after a user leaves the page, so that when they come back they won't have to refilter anything.
 
 ## How It Works
