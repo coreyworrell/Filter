@@ -123,6 +123,8 @@ class Filter {
 		}
 		
 		$this->_session_set();
+		
+		return $this;
 	}
 	
 	/**
