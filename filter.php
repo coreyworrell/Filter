@@ -31,8 +31,11 @@ class Filter {
 	// Session key to store filters
 	protected $_sk;
 	
+	// Instance of class
+	protected static $_instance;
+	
 	/**
-	 * Creates a singleton instance
+	 * Creates an instance of Filter
 	 *
 	 * Add keys to grab from $_GET and $_POST to be used as filters
 	 *
@@ -42,11 +45,12 @@ class Filter {
 	 */
 	public static function instance(array $keys, $session_key = 'filters')
 	{
-		static $instance;
+		if (self::$_instance === NULL)
+		{
+			self::$_instance = new Filter($keys, $session_key);
+		}
 		
-		$instance OR $instance = new Filter($keys, $session_key);
-		
-		return $instance;
+		return self::$_instance;
 	}
 	
 	/**
@@ -266,6 +270,8 @@ class Filter {
 	
 	/**
 	 * Writes the filters to the session
+	 *
+	 * @return  void
 	 */
 	protected function _session_set()
 	{

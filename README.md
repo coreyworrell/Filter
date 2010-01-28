@@ -105,14 +105,14 @@ If you set this up for all your pages, you could expect your `$_SESSION` array t
 
 ### Methods
 
-public static *instance (* array $keys, $session_key = 'filters' *)*  
+public static **instance (** array *$keys*, *$session_key* = 'filters' **)**  
 >Creates a singleton instance  
->Add keys to grab from $_GET and $_POST to be used as filters
+>Add keys to grab from $\_GET and $\_POST to be used as filters
 
-*$keys* (array) &mdash; key => default to grab from globals  
-*$session_key* (string) &mdash; Session key to store filters in
+**$keys** (array) &mdash; key => default to grab from globals  
+**$session_key** (string) &mdash; Session key to store filters in
 
-return *Filter*
+return **Filter**
 
 	$filters = Filter::instance(array(
 			'page'     => 1,
@@ -120,28 +120,26 @@ return *Filter*
 			'category' => 'news',
 		), 'my_filters');
 
-&nbsp;
----
+## &nbsp;
 
-public *__construct (* array $keys, $session_key = 'filters' *)*  
->Sets up the filters environment in the Session
+public **__construct (** array *$keys*, *$session_key* = 'filters' **)**  
+>Sets up the filters environment in the session
 
-*$keys* (array) &mdash; key => default to grab from globals  
-*$session_key* (string) &mdash; Session key to store filters in
+**$keys** (array) &mdash; key => default to grab from globals  
+**$session_key** (string) &mdash; Session key to store filters in
 
-return *void*
+return **void**
 
-&nbsp;
----
+## &nbsp;
 
-public *add (* $keys, $value = NULL *)*  
+public **add (** *$keys*, *$value* = NULL **)**  
 >Add filters  
 >$keys can be an array containing keys => defaults
 
-*$keys* (string/array) &mdash; Filter key  
-*$value* (mixed) &mdash; Default value
+**$keys** (string/array) &mdash; Filter key  
+**$value** (mixed) &mdash; Default value
 
-return *Filter*
+return **Filter**
 
 	$filters->add('state', 'California');
 	
@@ -150,18 +148,17 @@ return *Filter*
 			'country' => 'USA',
 		));
 
-&nbsp;
----
+## &nbsp;
 
-public *set (* $keys, $value = NULL *)*  
->Set a key manually. Rather than getting from $_GET or $_POST  
+public **set (** *$keys*, *$value* = NULL **)**  
+>Set a key manually. Rather than getting from $\_GET or $\_POST  
 >  
 >$key can be an array containing keys => values to set multiple keys at once
 
-*$keys* (string/array) &mdash; Filter key  
-*$value* (mixed) &mdash; Filter value
+**$keys** (string/array) &mdash; Filter key  
+**$value** (mixed) &mdash; Filter value
 
-return *Filter*
+return **Filter**
 
 	$filters->set('state', 'Arizona');
 	
@@ -170,16 +167,15 @@ return *Filter*
 			'country' => $object->country,
 		));
 		
-&nbsp;
----
+## &nbsp;
 
-public *get (* $key = NULL, $default = NULL *)*  
+public **get (** *$key* = NULL, *$default* = NULL **)**  
 >Get a filter, or if no params are given return all local filters
 
-*$key* (string) &mdash; Filter key  
-*$default* (mixed) &mdash; Default value if key does not exist
+**$key** (string) &mdash; Filter key  
+**$default** (mixed) &mdash; Default value if key does not exist
 
-return *mixed* &mdash; Filter value
+return **mixed** &mdash; Filter value
 
 	$country = $filters->get('country');
 	$country = $filters->get('country', 'Canada');
@@ -187,43 +183,40 @@ return *mixed* &mdash; Filter value
 	$filters = $filters->get();
 	$country = $filters['country'];
 	
-&nbsp;
----
+## &nbsp;
 
-public *get_global ( )*  
+public **get_global ( )**  
 >Get all global filters as an array
 
-return *array* &mdash; All Filters
+return **array** &mdash; All Filters
 
 	$global = $filters->get_global();
 	$blog_page = $global['blog']['index']['page'];
 	
-&nbsp;
----
+## &nbsp;
 
-public *delete (* $keys = NULL *)*  
+public **delete (** *$keys* = NULL **)**  
 >Delete filters  
 >If no keys are given, it will delete all local filters
 
-*$keys* (string/array) &mdash; One key or an array of keys to delete
+**$keys** (string/array) &mdash; One key or an array of keys to delete
 
-return *Filter*
+return **Filter**
 
 	$filters->delete('page');
 	// $filters->page is now undefined
 	
 	$filters->delete(array('page', 'country', 'category'));
 	
-&nbsp;
----
+## &nbsp;
 
-public *reset (* $keys = NULL *)*  
+public **reset (** *$keys* = NULL **)**  
 >Reset filters to defaults  
 >If no keys are given, all keys will be reset
 
-*$keys* (string/array) &mdash; One key or an array of keys to reset
+**$keys** (string/array) &mdash; One key or an array of keys to reset
 
-return *Filter*
+return **Filter**
 
 	$filters->reset();
 	// All filters are now reset to their defaults
@@ -233,29 +226,27 @@ return *Filter*
 	
 	$filters->reset(array('page', 'country', 'category'));
 	
-&nbsp;
----
+## &nbsp;
 
-public *__set (* $key, $value *)*  
+public **__set (** *$key*, *$value* **)**  
 >Magic function to set a local filter
 
-*$key* (string) &mdash; Filter key  
-*$value* (mixed) &mdash; Filter value
+**$key** (string) &mdash; Filter key  
+**$value** (mixed) &mdash; Filter value
 
-return *void*
+return **void**
 
 	$filters->page = 2;
 	$filters->country = 'Canada';
 	
-&nbsp;
----
+## &nbsp;
 
-public *__get (* $key *)*  
+public **__get (** *$key* **)**  
 >Magic function to get a local filter
 
-*$key* (string) &mdash; Filter key
+**$key** (string) &mdash; Filter key
 
-return *mixed* &mdash; Filter value
+return **mixed** &mdash; Filter value
 
 	$filters->page = 4;
 	echo $filters->page;
