@@ -34,20 +34,9 @@ class Filter {
 	/**
 	 * Creates a singleton instance
 	 *
-	 * Add any number of keys to grab from $_GET and $_POST to be used as filters
-	 * Associative array of keys => defaults
+	 * Add keys to grab from $_GET and $_POST to be used as filters
 	 *
-	 * For example, if you want to store the page number and ordering for this page,
-	 * you'd do this:
-	 *     Filter::instance(array(
-	 *         'page'  => 1,
-	 *         'order' => 'id DESC',
-	 *     ));
-	 *
-	 * And now it will get the 'page' and 'ordering' values from $_GET or $_POST and
-	 * store them in the Session
-	 *
-	 * @param   array   Key => Defaults to grab from globals
+	 * @param   array   key => default to grab from globals
 	 * @param   string  Session key to store filters in
 	 * @return  Filter
 	 */
@@ -63,7 +52,7 @@ class Filter {
 	/**
 	 * Sets up the filters environment in the Session
 	 *
-	 * @param   array   Key => Defaults to grab from globals
+	 * @param   array   key => default to grab from globals
 	 * @param   string  Session key to store filters in
 	 * @return  void
 	 */
@@ -95,7 +84,7 @@ class Filter {
 	
 	/**
 	 * Add filters
-	 * $keys can be an array containing Keys => Defaults
+	 * $keys can be an array containing keys => defaults
 	 *
 	 * @param   string   Filter key
 	 * @param   mixed    Default
@@ -130,11 +119,10 @@ class Filter {
 	/**
 	 * Set a key manually. Rather than getting from $_GET or $_POST
 	 *
-	 * $key can be an array containing keys => values to set multiple
-	 * keys as once
+	 * $key can be an array containing keys => values to set multiple keys at once
 	 *
 	 * @param   string   Filter name
-	 * @param   mixed    Value of the filter
+	 * @param   mixed    Filter value
 	 * @return  Filter
 	 */
 	public function set($keys, $value = NULL)
@@ -159,7 +147,7 @@ class Filter {
 	 *
 	 * @param   string   Filter key
 	 * @param   mixed    Default value if key does not exist
-	 * @return  mixed    Value of filter
+	 * @return  mixed    Filter value
 	 */
 	public function get($key = NULL, $default = NULL)
 	{
@@ -257,7 +245,7 @@ class Filter {
 	 * Magic function to set a local filter
 	 *
 	 * @param   string   Filter name
-	 * @param   mixed    Value of the filter
+	 * @param   mixed    Filter value
 	 * @return  void
 	 */
 	public function __set($key, $value)
@@ -269,7 +257,7 @@ class Filter {
 	 * Magic function to get a local filter
 	 *
 	 * @param   string   Filter name
-	 * @return  void
+	 * @return  mixed    Filter value
 	 */
 	public function __get($key)
 	{
