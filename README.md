@@ -105,11 +105,11 @@ If you set this up for all your pages, you could expect your `$_SESSION` array t
 
 ### Methods
 
-public static *instance (* array $keys, $session_key = 'filters' *)*
->Creates a singleton instance
+public static *instance (* array $keys, $session_key = 'filters' *)*  
+>Creates a singleton instance  
 >Add keys to grab from $_GET and $_POST to be used as filters
 
-*$keys* (array) &mdash; key => default to grab from globals
+*$keys* (array) &mdash; key => default to grab from globals  
 *$session_key* (string) &mdash; Session key to store filters in
 
 return *Filter*
@@ -123,10 +123,10 @@ return *Filter*
 &nbsp;
 ---
 
-public *__construct (* array $keys, $session_key = 'filters' *)*
+public *__construct (* array $keys, $session_key = 'filters' *)*  
 >Sets up the filters environment in the Session
 
-*$keys* (array) &mdash; key => default to grab from globals
+*$keys* (array) &mdash; key => default to grab from globals  
 *$session_key* (string) &mdash; Session key to store filters in
 
 return *void*
@@ -134,11 +134,11 @@ return *void*
 &nbsp;
 ---
 
-public *add (* $keys, $value = NULL *)*
->Add filters
+public *add (* $keys, $value = NULL *)*  
+>Add filters  
 >$keys can be an array containing keys => defaults
 
-*$keys* (string/array) &mdash; Filter key
+*$keys* (string/array) &mdash; Filter key  
 *$value* (mixed) &mdash; Default value
 
 return *Filter*
@@ -153,12 +153,12 @@ return *Filter*
 &nbsp;
 ---
 
-public *set (* $keys, $value = NULL *)*
->Set a key manually. Rather than getting from $_GET or $_POST
->
+public *set (* $keys, $value = NULL *)*  
+>Set a key manually. Rather than getting from $_GET or $_POST  
+>  
 >$key can be an array containing keys => values to set multiple keys at once
 
-*$keys* (string/array) &mdash; Filter key
+*$keys* (string/array) &mdash; Filter key  
 *$value* (mixed) &mdash; Filter value
 
 return *Filter*
@@ -173,10 +173,10 @@ return *Filter*
 &nbsp;
 ---
 
-public *get (* $key = NULL, $default = NULL *)*
+public *get (* $key = NULL, $default = NULL *)*  
 >Get a filter, or if no params are given return all local filters
 
-*$key* (string) &mdash; Filter key
+*$key* (string) &mdash; Filter key  
 *$default* (mixed) &mdash; Default value if key does not exist
 
 return *mixed* &mdash; Filter value
@@ -190,7 +190,7 @@ return *mixed* &mdash; Filter value
 &nbsp;
 ---
 
-public *get_global ( )*
+public *get_global ( )*  
 >Get all global filters as an array
 
 return *array* &mdash; All Filters
@@ -201,8 +201,8 @@ return *array* &mdash; All Filters
 &nbsp;
 ---
 
-public *delete (* $keys = NULL *)*
->Delete filters
+public *delete (* $keys = NULL *)*  
+>Delete filters  
 >If no keys are given, it will delete all local filters
 
 *$keys* (string/array) &mdash; One key or an array of keys to delete
@@ -217,8 +217,8 @@ return *Filter*
 &nbsp;
 ---
 
-public *reset (* $keys = NULL *)*
->Reset filters to defaults
+public *reset (* $keys = NULL *)*  
+>Reset filters to defaults  
 >If no keys are given, all keys will be reset
 
 *$keys* (string/array) &mdash; One key or an array of keys to reset
@@ -236,10 +236,10 @@ return *Filter*
 &nbsp;
 ---
 
-public *__set (* $key, $value *)*
+public *__set (* $key, $value *)*  
 >Magic function to set a local filter
 
-*$key* (string) &mdash; Filter key
+*$key* (string) &mdash; Filter key  
 *$value* (mixed) &mdash; Filter value
 
 return *void*
@@ -250,7 +250,7 @@ return *void*
 &nbsp;
 ---
 
-public *__get (* $key *)*
+public *__get (* $key *)*  
 >Magic function to get a local filter
 
 *$key* (string) &mdash; Filter key
