@@ -20,13 +20,10 @@ class Filter {
 	protected $_local = array();
 	
 	// References to the defaults
-	protected $_keys;
+	protected $_keys = array();
 	
 	// Reference to globals
-	protected $_globals;
-	
-	// Reference to the session
-	protected $_session;
+	protected $_globals = array();
 	
 	// Session key to store filters
 	protected $_sk;
