@@ -62,10 +62,9 @@ class Filter {
 	 */
 	public function __construct(array $keys, $session_key = 'filters')
 	{
-		$this->_session = Session::instance();
 		$this->_sk      = $session_key;
 		$this->_keys    = $keys;
-		$this->_filters = $this->_session->get($this->_sk, array());
+		$this->_filters = Session::instance()->get($this->_sk, array());
 		$this->_globals = Arr::merge($_POST, $_GET);
 		
 		$controller = Request::instance()->controller;
@@ -109,7 +108,7 @@ class Filter {
 			{
 				$this->_local[$key] = Arr::get($this->_globals, $key, $default);
 			}
-			elseif ( ! array_key_exists($key, $this->_local))
+			else
 			{
 				$this->_local[$key] = $default;
 			}
@@ -275,7 +274,7 @@ class Filter {
 	 */
 	protected function _session_set()
 	{
-		$this->_session->set($this->_sk, $this->_filters);
+		Session::instance()->set($this->_sk, $this->_filters);
 	}
 
 }
