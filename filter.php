@@ -105,7 +105,7 @@ class Filter {
 			{
 				$this->_local[$key] = Arr::get($this->_globals, $key, $default);
 			}
-			else
+			elseif ( ! array_key_exists($key, $this->_local))
 			{
 				$this->_local[$key] = $default;
 			}
