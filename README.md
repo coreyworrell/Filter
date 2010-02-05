@@ -5,7 +5,7 @@ the session is that the filters will remain after a user leaves the page, so tha
 
 ## Example Usage
 
-*/application/controller/blog.php*
+**/application/controller/blog.php**
 
 		class Controller_Blog extends Controller_Template {
 			
@@ -40,7 +40,7 @@ the session is that the filters will remain after a user leaves the page, so tha
 		
 		}
 
-*/application/views/blog.php*
+**/application/views/blog.php**
 
 	<h1>Blog</h1>
 	
@@ -203,6 +203,9 @@ public **delete (** *$keys* = NULL **)**
 
 return **Filter**
 
+	$filters->delete();
+	// All local filters are now undefined
+	
 	$filters->delete('page');
 	// $filters->page is now undefined
 	

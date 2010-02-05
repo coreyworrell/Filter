@@ -20,13 +20,10 @@ class Filter {
 	protected $_local = array();
 	
 	// References to the defaults
-	protected $_keys;
+	protected $_keys = array();
 	
 	// Reference to globals
-	protected $_globals;
-	
-	// Reference to the session
-	protected $_session;
+	protected $_globals = array();
 	
 	// Session key to store filters
 	protected $_sk;
@@ -62,11 +59,10 @@ class Filter {
 	 */
 	public function __construct(array $keys, $session_key = 'filters')
 	{
-		$this->_session = Session::instance();
 		$this->_sk      = $session_key;
 		$this->_keys    = $keys;
-		$this->_filters = $this->_session->get($this->_sk, array());
-		$this->_globals = Arr::merge($_POST, $_GET);
+		$this->_filters = Session::instance()->get($this->_sk, array());
+		$this->_globals = arr::merge($_POST, $_GET);
 		
 		$controller = Request::instance()->controller;
 		$action     = Request::instance()->action;
@@ -161,7 +157,7 @@ class Filter {
 		}
 		else
 		{
-			$data = Arr::get($this->_local, $key, $default);
+			$data = arr::get($this->_local, $key, $default);
 		}
 		
 		return $data;
@@ -275,7 +271,7 @@ class Filter {
 	 */
 	protected function _session_set()
 	{
-		$this->_session->set($this->_sk, $this->_filters);
+		Session::instance()->set($this->_sk, $this->_filters);
 	}
 
 }
