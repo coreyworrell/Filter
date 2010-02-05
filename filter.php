@@ -62,7 +62,7 @@ class Filter {
 		$this->_sk      = $session_key;
 		$this->_keys    = $keys;
 		$this->_filters = Session::instance()->get($this->_sk, array());
-		$this->_globals = arr::merge($_POST, $_GET);
+		$this->_globals = Arr::merge($_POST, $_GET);
 		
 		$controller = Request::instance()->controller;
 		$action     = Request::instance()->action;
