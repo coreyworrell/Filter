@@ -40,7 +40,7 @@ class Filter {
 	 * @param   string  Session key to store filters in
 	 * @return  Filter
 	 */
-	public static function instance(array $keys, $session_key = 'filters')
+	public static function instance(array $keys = array(), $session_key = 'filters')
 	{
 		if (self::$_instance === NULL)
 		{
@@ -57,7 +57,7 @@ class Filter {
 	 * @param   string  Session key to store filters in
 	 * @return  void
 	 */
-	public function __construct(array $keys, $session_key = 'filters')
+	public function __construct(array $keys = array(), $session_key = 'filters')
 	{
 		$this->_sk      = $session_key;
 		$this->_keys    = $keys;
