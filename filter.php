@@ -157,7 +157,7 @@ class Filter {
 		}
 		else
 		{
-			$data = arr::get($this->_local, $key, $default);
+			$data = Arr::get($this->_local, $key, $default);
 		}
 		
 		return $data;
@@ -262,6 +262,28 @@ class Filter {
 	public function __get($key)
 	{
 		return $this->get($key);
+	}
+	
+	/**
+	 * Magic function to check if filter is set
+	 *
+	 * @param   string   Filter name
+	 * @return  boolean
+	 */
+	public function __isset($key)
+	{
+		return isset($this->_local[$key]);
+	}
+	
+	/**
+	 * Magic function to unset a filter key
+	 *
+	 * @param   string   Filter name
+	 * @return  void
+	 */
+	public function __unset($key)
+	{
+		unset($this->_local[$key]);
 	}
 	
 	/**

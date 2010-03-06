@@ -105,8 +105,8 @@ If you set this up for all your pages, you could expect your `$_SESSION` array t
 
 ### Methods
 
-public static **instance (** array *$keys*, *$session_key* = 'filters' **)**  
->Creates a singleton instance  
+public static **instance (** array *$keys* = array(), *$session_key* = 'filters' **)**  
+>Creates an instance of Filter class  
 >Add keys to grab from $\_GET and $\_POST to be used as filters
 
 **$keys** (array) &mdash; key => default to grab from globals  
@@ -122,7 +122,7 @@ return **Filter**
 
 ## &nbsp;
 
-public **__construct (** array *$keys*, *$session_key* = 'filters' **)**  
+public **__construct (** array *$keys* = array(), *$session_key* = 'filters' **)**  
 >Sets up the filters environment in the session
 
 **$keys** (array) &mdash; key => default to grab from globals  
