@@ -57,7 +57,7 @@ class Filter {
 	 * @param   string  Session key to store filters in
 	 * @return  void
 	 */
-	public function __construct(array $keys = array(), $session_key = 'filters')
+	protected function __construct(array $keys = array(), $session_key = 'filters')
 	{
 		$this->_sk      = $session_key;
 		$this->_keys    = $keys;
@@ -284,6 +284,14 @@ class Filter {
 	public function __unset($key)
 	{
 		unset($this->_local[$key]);
+	}
+	
+	/**
+	 * Enforce singleton
+	 */
+	final private function __clone()
+	{
+	
 	}
 	
 	/**
