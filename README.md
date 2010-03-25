@@ -18,7 +18,7 @@ the session is that the filters will remain after a user leaves the page, so tha
 				
 				$filters = Filter::instance(array(
 						'page'     => 1,
-						'ordering' => 'id DESC',
+						'category' => 'default-category',
 						'search'   => NULL,
 					));
 					
@@ -26,7 +26,7 @@ the session is that the filters will remain after a user leaves the page, so tha
 				$offset = ($filters->page - 1) * $per_page;
 					
 				$posts = Model::factory('post')
-					->where('category_id', '=', $filters->category)
+					->where('category_name', '=', $filters->category)
 					->where_open()
 						->where('title', 'LIKE', $filters->search)
 						->or_where('body', 'LIKE', $filters->search)
@@ -119,16 +119,6 @@ return **Filter**
 			'order'    => 'id_desc',
 			'category' => 'news',
 		), 'my_filters');
-
-## &nbsp;
-
-public **__construct (** array *$keys* = array(), *$session_key* = 'filters' **)**  
->Sets up the filters environment in the session
-
-**$keys** (array) &mdash; key => default to grab from globals  
-**$session_key** (string) &mdash; Session key to store filters in
-
-return **void**
 
 ## &nbsp;
 

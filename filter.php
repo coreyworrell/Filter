@@ -40,11 +40,11 @@ class Filter {
 	 * @param   string  Session key to store filters in
 	 * @return  Filter
 	 */
-	public static function instance(array $keys = array(), $session_key = 'filters')
+	public static function instance(array $keys = array(), $sk = 'filters')
 	{
 		if (self::$_instance === NULL)
 		{
-			self::$_instance = new Filter($keys, $session_key);
+			self::$_instance = new Filter($keys, $sk);
 		}
 		
 		return self::$_instance;
@@ -57,9 +57,9 @@ class Filter {
 	 * @param   string  Session key to store filters in
 	 * @return  void
 	 */
-	protected function __construct(array $keys = array(), $session_key = 'filters')
+	protected function __construct(array $keys, $sk)
 	{
-		$this->_sk      = $session_key;
+		$this->_sk      = $sk;
 		$this->_keys    = $keys;
 		$this->_filters = Session::instance()->get($this->_sk, array());
 		$this->_globals = Arr::merge($_POST, $_GET);
@@ -287,14 +287,6 @@ class Filter {
 	}
 	
 	/**
-	 * Enforce singleton
-	 */
-	final private function __clone()
-	{
-	
-	}
-	
-	/**
 	 * Writes the filters to the session
 	 *
 	 * @return  void
@@ -302,6 +294,14 @@ class Filter {
 	protected function _session_set()
 	{
 		Session::instance()->set($this->_sk, $this->_filters);
+	}
+	
+	/**
+	 * Enforce singleton
+	 */
+	final private function __clone()
+	{
+	
 	}
 
 }
