@@ -2,250 +2,337 @@
 /**
  * Filter
  *
- * Sets up a filtering system where keys from $_GET and $_POST can be stored
+ * Sets up a filtering system where keys from `$_GET` and `$_POST` can be stored
  * in the session to be used to filter data. The advantage to storing these in
  * the session is that the filters will remain after a user leaves the page,
  * so that when they come back they won't have to refilter anything.
  *
+ * @package  Filter
  * @author   Corey Worrell
  * @homepage http://coreyworrell.com
- * @version  1.2
+ * @version  1.3
  */
 class Filter {
 	
-	// Holds all filters available across site
+	/**
+	 * @var  string  session key to store filters in
+	 */
+	public static $session_key = 'filters';
+	
+	/**
+	 * @var  array  holds all the filters
+	 */
 	protected $_filters = array();
 	
-	// Holds the filters 'local' to the active controller and action
-	protected $_local = array();
+	/**
+	 * @var  array  holds the defaults for filters
+	 */
+	protected $_originals = array();
 	
-	// References to the defaults
-	protected $_keys = array();
+	/**
+	 * @var  array  holds the keys that have changed since the last page load
+	 */
+	protected $_changed = array();
 	
-	// Reference to globals
-	protected $_globals = array();
+	/**
+	 * @var  string  path to current request
+	 */
+	protected $_path;
 	
-	// Session key to store filters
-	protected $_sk;
+	/**
+	 * @var  array  `$_GET` and `$_POST` merged
+	 */
+	protected $_globals;
 	
-	// Instance of class
+	/**
+	 * @var  Filter  current instance of Filter
+	 */
 	protected static $_instance;
 	
 	/**
-	 * Creates an instance of Filter
+	 * Return an instance of Filter for current request
 	 *
-	 * Add keys to grab from $_GET and $_POST to be used as filters
+	 *     $filters = Filter::instance(array(
+	 *         'page'     => 1,
+	 *         'per_page' => 20,
+	 *         'search'   => '',
+	 *         'status'   => 'published',
+	 *     ));
 	 *
-	 * @param   array   key => default to grab from globals
-	 * @param   string  Session key to store filters in
+	 * @chainable
+	 * @param   array  $filters  filters to keep track of
 	 * @return  Filter
 	 */
-	public static function instance(array $keys = array(), $sk = 'filters')
+	public static function instance($filters = NULL)
 	{
-		if (self::$_instance === NULL)
+		if (Filter::$_instance === NULL)
 		{
-			self::$_instance = new Filter($keys, $sk);
+			Filter::$_instance = new Filter($filters);
 		}
 		
-		return self::$_instance;
+		return Filter::$_instance;
 	}
 	
 	/**
-	 * Sets up the filters environment in the Session
+	 * Return an instance of Filter for the path given
 	 *
-	 * @param   array   key => default to grab from globals
-	 * @param   string  Session key to store filters in
-	 * @return  void
-	 */
-	protected function __construct(array $keys, $sk)
-	{
-		$this->_sk      = $sk;
-		$this->_keys    = $keys;
-		$this->_filters = Session::instance()->get($this->_sk, array());
-		$this->_globals = Arr::merge($_POST, $_GET);
-		
-		$controller = Request::instance()->controller;
-		$action     = Request::instance()->action;
-		
-		if ( ! isset($this->_filters[$controller]))
-		{
-			$this->_filters[$controller] = array();
-		}
-		
-		if ( ! isset($this->_filters[$controller][$action]))
-		{
-			$this->_filters[$controller][$action] = array();
-		}
-		
-		$this->_local = & $this->_filters[$controller][$action];
-		
-		$this->add($keys);
-	}
-	
-	/**
-	 * Add filters
-	 * $keys can be an array containing keys => defaults
+	 * Useful for getting the filter values from another controller or action
 	 *
-	 * @param   string   Filter key
-	 * @param   mixed    Default
+	 *     $filters = Filter::path('admin/blog/archives');
+	 *
+	 * @chainable
+	 * @param   string  $path  path to request
 	 * @return  Filter
 	 */
-	public function add($keys, $value = NULL)
+	public static function path($path)
 	{
-		if ( ! is_array($keys))
-		{
-			$keys = array($keys => $value);
-		}
-		
-		$this->_keys += $keys;
-		
-		foreach ($keys as $key => $default)
-		{
-			if (array_key_exists($key, $this->_globals))
-			{
-				$this->_local[$key] = Arr::get($this->_globals, $key, $default);
-			}
-			elseif ( ! array_key_exists($key, $this->_local))
-			{
-				$this->_local[$key] = $default;
-			}
-		}
-		
-		$this->_session_set();
-		
-		return $this;
+		return new Filter(NULL, $path);
 	}
 	
 	/**
-	 * Set a key manually. Rather than getting from $_GET or $_POST
+	 * Create a new instance of Filter
 	 *
-	 * $key can be an array containing keys => values to set multiple keys at once
+	 * Sets up globals and adds keys to keep track of
 	 *
-	 * @param   string   Filter name
-	 * @param   mixed    Filter value
+	 * @param   array   $filters  global keys to keep track of
+	 * @param   string  $path     path to request (if not getting current request)
 	 * @return  Filter
 	 */
-	public function set($keys, $value = NULL)
+	public function __construct($filters = NULL, $path = NULL)
 	{
-		if ( ! is_array($keys))
-		{
-			$keys = array($keys => $value);
-		}
+		$this->_globals = array_merge($_POST, $_GET);
 		
-		foreach ($keys as $key => $value)
+		if ($path === NULL)
 		{
-			$this->_local[$key] = $value;
-		}
-		
-		$this->_session_set();
-		
-		return $this;
-	}
-	
-	/**
-	 * Get a filter, or if no params are given return all local filters
-	 *
-	 * @param   string   Filter key
-	 * @param   mixed    Default value if key does not exist
-	 * @return  mixed    Filter value
-	 */
-	public function get($key = NULL, $default = NULL)
-	{
-		if (empty($key))
-		{
-			$data = $this->_local;
+			$directory  = Request::$current->directory();
+			$controller = Request::$current->controller();
+			$action     = Request::$current->action();
+			
+			$this->_path = trim("$directory/$controller/$action", '/');
+			
+			unset($directory, $controller, $action);
 		}
 		else
 		{
-			$data = Arr::get($this->_local, $key, $default);
+			$this->_path = $path;
 		}
 		
-		return $data;
+		// Get filters from session
+		$this->_filters = Session::instance()->get(Filter::$session_key, array());
+		
+		// Make sure paths exist
+		if ( ! isset($this->_filters[$this->_path]))
+		{
+			$this->_filters[$this->_path] = array();
+		}
+		
+		if ( ! isset($this->_changed[$this->_path]))
+		{
+			$this->_changed[$this->_path] = array();
+		}
+		
+		// If filters are passed, keep track of them
+		if (is_array($filters))
+		{
+			$this->track($filters);
+		}
 	}
 	
 	/**
-	 * Get all global filters as an array
+	 * Keep track of global keys
 	 *
-	 * @return   array  All filters
+	 * Can be called instead of passing filters to [Filter::instance]
+	 *
+	 *     $filters = Filter::instance()
+	 *         ->track(array(
+	 *             'page'     => 1,
+	 *             'per_page' => 20,
+	 *         ));
+	 *
+	 * @chainable
+	 * @param   array  $filters  global keys to keep track of
+	 * @return  Filter
 	 */
-	public function get_global()
+	public function track(array $filters)
 	{
-		return $this->_filters;
+		$this->_originals += $filters;
+		
+		foreach ($filters as $key => $default)
+		{
+			if (array_key_exists($key, $this->_globals))
+			{
+				$value = $this->_globals[$key];
+				
+				if (array_key_exists($key, $this->_filters[$this->_path]) AND $this->_filters[$this->_path][$key] !== $value)
+				{
+					$this->_changed[$this->_path][$key] = $key;
+				}
+				
+				$this->_filters[$this->_path][$key] = $value;
+			}
+			elseif ( ! array_key_exists($key, $this->_filters[$this->_path]))
+			{
+				// NULL doesn't exist for incoming data, as all params are strings
+				if ($default === NULL)
+				{
+					$default = '';
+				}
+				
+				$this->_filters[$this->_path][$key] = $default;
+			}
+		}
+		
+		$this->_save();
+		
+		return $this;
 	}
 	
 	/**
-	 * Delete filters
-	 * If no keys are given, it will delete all local filters
+	 * Set a filter manually, instead of letting Filter get it from the globals
 	 *
-	 * @param   array   One key or an array of keys to delete
+	 *     $filters->set('page', 10);
+	 *     
+	 *     $filters->set(array(
+	 *         'status' => 'draft',
+	 *         'order'  => 'date',
+	 *     ));
+	 *
+	 * @chainable
+	 * @param   mixed  $filters  array of key => values, or just the key
+	 * @param   mixed  $value    value of key if first param is a string
+	 * @return  Filter
+	 */
+	public function set($filters, $value = NULL)
+	{
+		if ( ! is_array($filters))
+		{
+			$filters = array($filters => $value);
+		}
+		
+		foreach ($filters as $key => $value)
+		{
+			$this->_filters[$this->_path][$key] = $value;
+		}
+		
+		$this->_save();
+		
+		return $this;
+	}
+	
+	/**
+	 * Get the value of a stored filter, or all filters
+	 *
+	 *     $page = $filters->get('page', 1);
+	 *     
+	 *     $as_array = $filters->get();
+	 *
+	 * @param   string  $key      filter to return
+	 * @param   mixed   $default  default value if key is empty or doesn't exist
+	 * @return  mixed   filter value(s)
+	 */
+	public function get($key = NULL, $default = NULL)
+	{
+		if ($key === NULL)
+		{
+			return $this->_filters[$this->_path];
+		}
+		
+		return Arr::get($this->_filters[$this->_path], $key, $default);
+	}
+	
+	/**
+	 * Removes a filter entirely
+	 *
+	 * [!!] Note: This only affects the current page request
+	 *
+	 *     $filters->delete('page');
+	 *     
+	 *     $filters->delete(array('page', 'per_page', 'search'));
+	 *
+	 * @chainable
+	 * @param   mixed  $keys  key or array of keys to delete
 	 * @return  Filter
 	 */
 	public function delete($keys = NULL)
 	{
-		if (empty($keys))
+		if ($keys === NULL)
 		{
-			$this->_local = array();
+			$this->_filters[$this->_path] = array();
 		}
 		else
 		{
-			if ( ! is_array($keys))
+			foreach ((array) $keys as $key)
 			{
-				$keys = array($keys);
-			}
-			
-			foreach ($keys as $key)
-			{
-				if (array_key_exists($key, $this->_local))
-				{
-					unset($this->_local[$key]);
-				}
+				unset($this->_filters[$this->_path][$key]);
 			}
 		}
 		
-		$this->_session_set();
+		$this->_save();
 		
 		return $this;
 	}
 	
 	/**
-	 * Reset filters to defaults
-	 * If no keys are given, all keys will be reset
+	 * Resets a key, or all keys, to their defaults
 	 *
-	 * @param   array   One key or an array of keys to reset
+	 *     // Set the page back to its default (1)
+	 *     $filters->reset('page');
+	 *     
+	 *     // Reset a group of filters
+	 *     $filters->reset(array('page', 'per_page', 'search'));
+	 *     
+	 *     // Reset all the filters
+	 *     $filters->reset();
+	 *
+	 * @chainable
+	 * @param   mixed  $keys  key or array of keys to reset
 	 * @return  Filter
 	 */
 	public function reset($keys = NULL)
 	{
-		if (empty($keys))
+		if ($keys === NULL)
 		{
-			foreach ($this->_keys as $key => $default)
-			{
-				$this->_local[$key] = $default;
-			}
-		}
-		else
-		{
-			if ( ! is_array($keys))
-			{
-				$keys = array($keys);
-			}
-			
-			foreach ($keys as $key)
-			{
-				$this->_local[$key] = $this->_keys[$key];
-			}
+			$keys = array_keys($this->_originals);
 		}
 		
-		$this->_session_set();
+		foreach ((array) $keys as $key)
+		{
+			$this->_filters[$this->_path][$key] = $this->_originals[$key];
+		}
+		
+		$this->_save();
 		
 		return $this;
 	}
 	
 	/**
-	 * Magic function to set a local filter
+	 * Check whether a filter has changed since the last page load
 	 *
-	 * @param   string   Filter name
-	 * @param   mixed    Filter value
+	 *      if ($filters->changed('search'))
+	 *      {
+	 *          $filters->reset('page');
+	 *      }
+	 *
+	 * @param   string  $key  key to check for, or NULL to return array of changed keys
+	 * @return  mixed   boolean or array depending on first param passed
+	 */
+	public function changed($key = NULL)
+	{
+		if ($key === NULL)
+		{
+			return $this->_changed[$this->_path];
+		}
+		
+		return isset($this->_changed[$this->_path][$key]);
+	}
+	
+	/**
+	 * Sets a filter
+	 *
+	 *     $filters->page = 10;
+	 *
+	 * @param   string  $key    filter key
+	 * @param   string  $value  filter value
 	 * @return  void
 	 */
 	public function __set($key, $value)
@@ -254,10 +341,12 @@ class Filter {
 	}
 	
 	/**
-	 * Magic function to get a local filter
+	 * Gets a filter value
 	 *
-	 * @param   string   Filter name
-	 * @return  mixed    Filter value
+	 *     $page = $filters->page
+	 *
+	 * @param   string  $key  filter key
+	 * @return  mixed   filter value
 	 */
 	public function __get($key)
 	{
@@ -265,43 +354,41 @@ class Filter {
 	}
 	
 	/**
-	 * Magic function to check if filter is set
+	 * Check if a filter is set
 	 *
-	 * @param   string   Filter name
+	 *     if (isset($filters->page)) ...
+	 *
+	 * @param   string  $key  filter key
 	 * @return  boolean
 	 */
 	public function __isset($key)
 	{
-		return isset($this->_local[$key]);
+		return isset($this->_filters[$this->_path][$key]);
 	}
 	
 	/**
-	 * Magic function to unset a filter key
+	 * Unset/remove a filter
 	 *
-	 * @param   string   Filter name
+	 * [!!] Note: This only affects the current request
+	 *
+	 *     unset($filters->page);
+	 *
+	 * @param   string  $key  filter key
 	 * @return  void
 	 */
 	public function __unset($key)
 	{
-		unset($this->_local[$key]);
+		$this->delete($key);
 	}
 	
 	/**
 	 * Writes the filters to the session
 	 *
-	 * @return  void
+	 * @return  Session
 	 */
-	protected function _session_set()
+	protected function _save()
 	{
-		Session::instance()->set($this->_sk, $this->_filters);
-	}
-	
-	/**
-	 * Enforce singleton
-	 */
-	final private function __clone()
-	{
-	
+		return Session::instance()->set(Filter::$session_key, $this->_filters);
 	}
 
 }
