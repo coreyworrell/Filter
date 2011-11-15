@@ -10,7 +10,7 @@
  * @package  Filter
  * @author   Corey Worrell
  * @homepage http://coreyworrell.com
- * @version  1.3
+ * @version  1.4
  */
 class Filter {
 	
@@ -45,48 +45,53 @@ class Filter {
 	protected $_globals;
 	
 	/**
-	 * @var  Filter  current instance of Filter
+	 * @var  Filter  instances of Filter
 	 */
-	protected static $_instance;
+	protected static $_instances;
 	
 	/**
-	 * Return an instance of Filter for current request
+	 * Return an instance of Filter for current request or for the path given
 	 *
+	 *     // Gets filters for current request
 	 *     $filters = Filter::instance(array(
 	 *         'page'     => 1,
 	 *         'per_page' => 20,
 	 *         'search'   => '',
 	 *         'status'   => 'published',
 	 *     ));
+	 *     
+	 *     // Get filters for a different request
+	 *     $filters = Filter::instance('admin/blog/archives');
 	 *
 	 * @chainable
 	 * @param   array  $filters  filters to keep track of
 	 * @return  Filter
 	 */
-	public static function instance($filters = NULL)
+	public static function instance($path = NULL, $filters = NULL)
 	{
-		if (Filter::$_instance === NULL)
+		if (is_array($path))
 		{
-			Filter::$_instance = new Filter($filters);
+			$filters = $path;
+			$path = NULL;
 		}
 		
-		return Filter::$_instance;
-	}
-	
-	/**
-	 * Return an instance of Filter for the path given
-	 *
-	 * Useful for getting the filter values from another controller or action
-	 *
-	 *     $filters = Filter::path('admin/blog/archives');
-	 *
-	 * @chainable
-	 * @param   string  $path  path to request
-	 * @return  Filter
-	 */
-	public static function path($path)
-	{
-		return new Filter(NULL, $path);
+		if ($path === NULL)
+		{
+			$directory  = Request::$current->directory();
+			$controller = Request::$current->controller();
+			$action     = Request::$current->action();
+			
+			$path = trim("$directory/$controller/$action", '/');
+			
+			unset($directory, $controller, $action);
+		}
+		
+		if ( ! isset(Filter::$_instances[$path]))
+		{
+			Filter::$_instances[$path] = new Filter($filters, $path);
+		}
+		
+		return Filter::$_instances[$path];
 	}
 	
 	/**
@@ -102,20 +107,7 @@ class Filter {
 	{
 		$this->_globals = array_merge($_POST, $_GET);
 		
-		if ($path === NULL)
-		{
-			$directory  = Request::$current->directory();
-			$controller = Request::$current->controller();
-			$action     = Request::$current->action();
-			
-			$this->_path = trim("$directory/$controller/$action", '/');
-			
-			unset($directory, $controller, $action);
-		}
-		else
-		{
-			$this->_path = $path;
-		}
+		$this->_path = $path;
 		
 		// Get filters from session
 		$this->_filters = Session::instance()->get(Filter::$session_key, array());
