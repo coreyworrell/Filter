@@ -8,7 +8,7 @@ the session is that the filters will remain after a user leaves the page, so tha
 **/application/controller/blog.php**
 
 ~~~ php
-&lt;?php
+<?php
 
 class Controller_Blog extends Controller_Template {
 	
